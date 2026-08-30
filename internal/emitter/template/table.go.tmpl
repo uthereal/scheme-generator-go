@@ -1,0 +1,39 @@
+package {{ .PackageName }}
+
+import (
+	"github.com/uthereal/scheme-runtime-go/pkg/contract"
+)
+
+// Table defines the table metadata.
+var Table = struct {
+	{{- range $sc := .Schemas }}
+		{{ $sc.ToGoPascalName }} struct {
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }} contract.TableMetadata[{{ $mName }}]
+			{{- end }}
+		}
+	{{- end }}
+}{
+	{{- range $sc := .Schemas }}
+		{{ $sc.ToGoPascalName }}: struct {
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }} contract.TableMetadata[{{ $mName }}]
+			{{- end }}
+		}{
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }}: contract.TableMetadata[{{ $mName }}]{
+					SchemaName: {{ printf "%q" $tbl.Schema.Name }},
+					TableName:  {{ printf "%q" $tbl.Name }},
+					DefaultColumns: []contract.Column[{{ $mName }}]{
+						{{- range $col := $tbl.Columns }}
+							Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $col.ToGoPascalName }},
+						{{- end }}
+					},
+				},
+			{{- end }}
+		},
+	{{- end }}
+}

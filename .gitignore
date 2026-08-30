@@ -1,0 +1,16 @@
+# Environments and secrets
+.env
+.env.*
+!.env.example
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Test & coverage
+coverage.txt
+coverage.html
+*.coverprofile

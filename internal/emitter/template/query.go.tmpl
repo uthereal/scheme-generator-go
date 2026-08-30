@@ -1,0 +1,25 @@
+package {{ .PackageName }}
+
+import (
+	"github.com/uthereal/scheme-runtime-go/pkg/contract"
+	"github.com/uthereal/scheme-runtime-go/pkg/grammar"
+	"github.com/uthereal/scheme-runtime-go/pkg/orm"
+)
+{{- range $tbl := .Tables }}
+	{{- $mName := $tbl.ToGoModelName }}
+
+	// New{{ $mName }}Query constructs a QueryBuilder.
+	func New{{ $mName }}Query(
+		db contract.DB,
+	) *orm.QueryBuilder[{{ $mName }}, {{ $mName }}Mutator] {
+		compiler := grammar.NewPostgresGrammar()
+		res := orm.NewQueryBuilder[{{ $mName }}, {{ $mName }}Mutator](
+			db,
+			compiler,
+			Table.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }},
+			Hydrate.{{ $mName }},
+			Dehydrate.{{ $mName }},
+		)
+		return res
+	}
+{{- end }}

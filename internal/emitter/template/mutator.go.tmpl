@@ -1,0 +1,19 @@
+package {{ .PackageName }}
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/uthereal/scheme-runtime-go/pkg/contract"
+)
+{{- range $tbl := .Tables }}
+	{{- $mName := $tbl.ToGoModelName }}
+
+	// {{ $mName }}Mutator manages partial payload mutations.
+	type {{ $mName }}Mutator struct {
+		{{- range $tbl.Columns }}
+			{{ .ToGoPascalName }} contract.Set[{{ .ToModelType }}]
+		{{- end }}
+	}
+{{- end }}

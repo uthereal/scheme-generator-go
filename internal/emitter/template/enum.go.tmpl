@@ -1,0 +1,13 @@
+package {{ .PackageName }}
+{{- range $sc := .Schemas }}
+	{{- range $enumName, $enum := $sc.Enums }}
+		{{- $goEnumName := $enum.ToGoPascalName }}
+
+		// {{ $goEnumName }} represents an enum.
+		type {{ $goEnumName }} string
+
+		{{- range $val := $enum.Values }}
+			const {{ $goEnumName }}{{ $enum.ValueToGoPascalName $val }} {{ $goEnumName }} = {{ printf "%q" $val }}
+		{{- end }}
+	{{- end }}
+{{- end }}

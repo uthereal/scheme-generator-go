@@ -1,0 +1,89 @@
+package {{ .PackageName }}
+
+import (
+	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/uthereal/scheme-runtime-go/pkg/orm/column"
+	"github.com/uthereal/scheme-runtime-go/pkg/orm/relation"
+)
+
+// Schema defines the type-safe column schema metadata.
+var Schema = struct {
+	{{- range $sc := .Schemas }}
+		{{ $sc.ToGoPascalName }} struct {
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }} struct {
+					{{- range $col := $tbl.Columns }}
+						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsTo }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasOne }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsToMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+				}
+			{{- end }}
+		}
+	{{- end }}
+}{
+	{{- range $sc := .Schemas }}
+		{{ $sc.ToGoPascalName }}: struct {
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }} struct {
+					{{- range $col := $tbl.Columns }}
+						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsTo }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasOne }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsToMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+				}
+			{{- end }}
+		}{
+			{{- range $tbl := $sc.SortedTables }}
+				{{- $mName := $tbl.ToGoModelName }}
+				{{ $mName }}: struct {
+					{{- range $col := $tbl.Columns }}
+						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsTo }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasOne }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.HasMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+					{{- range $rel := $tbl.BelongsToMany }}
+						{{ $rel.FieldName }} {{ $rel.ToQueryRelationType }}
+					{{- end }}
+				}{
+					{{- range $col := $tbl.Columns }}
+						{{ $col.ToGoPascalName }}: {{ $col.ToQueryColumnType $mName }}{
+							Name: {{ printf "%q" $col.Name }},
+						},
+					{{- end }}
+				},
+			{{- end }}
+		},
+	{{- end }}
+}

@@ -1,0 +1,29 @@
+package {{ .PackageName }}
+
+// Dehydrate maps mutator payloads to column slices.
+var Dehydrate = struct {
+	{{- range $tbl := .Tables }}
+		{{- $mName := $tbl.ToGoModelName }}
+		{{ $mName }} func(*{{ $mName }}Mutator) ([]string, []any)
+	{{- end }}
+}{
+	{{- range $tbl := .Tables }}
+		{{- $mName := $tbl.ToGoModelName }}
+		{{ $mName }}: func(
+			mutator *{{ $mName }}Mutator,
+		) ([]string, []any) {
+			var cols []string
+			var vals []any
+			{{- range $tbl.Columns }}
+				if mutator.{{ .ToGoPascalName }}.IsSet {
+					cols = append(
+						cols,
+						Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ .ToGoPascalName }}.ColumnName(),
+					)
+					vals = append(vals, mutator.{{ .ToGoPascalName }}.Value)
+				}
+			{{- end }}
+			return cols, vals
+		},
+	{{- end }}
+}

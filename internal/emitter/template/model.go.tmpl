@@ -1,0 +1,33 @@
+package {{ .PackageName }}
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+{{- range $tbl := .Tables }}
+	{{- $modelName := $tbl.ToGoModelName }}
+
+	// {{ $modelName }} represents a model for {{ $tbl.Schema.Name }}.{{ $tbl.Name }}.
+	type {{ $modelName }} struct {
+		// Model fields
+		{{- range $tbl.Columns }}
+			{{ .ToGoPascalName }} {{ .ToModelType }}
+		{{- end }}
+
+		// Relations
+		{{- range $tbl.BelongsTo }}
+			{{ .FieldName }} *{{ .ChildModel }}
+		{{- end }}
+		{{- range $tbl.HasOne }}
+			{{ .FieldName }} *{{ .ChildModel }}
+		{{- end }}
+		{{- range $tbl.HasMany }}
+			{{ .FieldName }} []*{{ .ChildModel }}
+		{{- end }}
+		{{- range $tbl.BelongsToMany }}
+			{{ .FieldName }} []*{{ .ChildModel }}
+		{{- end }}
+	}
+{{- end }}

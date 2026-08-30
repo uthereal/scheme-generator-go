@@ -1,0 +1,212 @@
+package {{ .PackageName }}
+
+import (
+	"github.com/uthereal/scheme-runtime-go/pkg/contract"
+	"github.com/uthereal/scheme-runtime-go/pkg/orm"
+	"github.com/uthereal/scheme-runtime-go/pkg/orm/relation"
+)
+
+func init() {
+	{{- range $tbl := .Tables }}
+		{{- $mName := $tbl.ToGoModelName }}
+		{{- range $rel := $tbl.BelongsTo }}
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.BelongsTo[
+				{{ $rel.ParentModel }},
+				{{ $rel.ChildModel }},
+				{{ $rel.ChildMutator }},
+			]{
+				Relation: relation.Relation[
+					{{ $rel.ParentModel }},
+					{{ $rel.ChildModel }},
+					{{ $rel.ChildMutator }},
+				]{
+					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
+						{{- range $col := $rel.LocalKeyCols }}
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+						{{- end }}
+					},
+					ChildQueryFactory: func(
+						db contract.DB,
+					) *orm.QueryBuilder[{{ $rel.ChildModel }}, {{ $rel.ChildMutator }}] {
+						return New{{ $rel.ChildModel }}Query(db)
+					},
+					{{- if eq (len $rel.ForeignKeyCols) 1 }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return p.{{ (index $rel.ForeignKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return []any{
+								{{- range $col := $rel.ForeignKeyCols }}
+									p.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					{{- if eq (len $rel.LocalKeyCols) 1 }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return c.{{ (index $rel.LocalKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return []any{
+								{{- range $col := $rel.LocalKeyCols }}
+									c.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					Hydrator: func(p *{{ $rel.ParentModel }}, children []{{ $rel.ChildModel }}) {
+						if len(children) > 0 {
+							p.{{ $rel.FieldName }} = &children[0]
+						}
+					},
+				},
+			}
+		{{- end }}
+		{{- range $rel := $tbl.HasOne }}
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.HasOne[
+				{{ $rel.ParentModel }},
+				{{ $rel.ChildModel }},
+				{{ $rel.ChildMutator }},
+			]{
+				Relation: relation.Relation[
+					{{ $rel.ParentModel }},
+					{{ $rel.ChildModel }},
+					{{ $rel.ChildMutator }},
+				]{
+					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
+						{{- range $col := $rel.ForeignKeyCols }}
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+						{{- end }}
+					},
+					ChildQueryFactory: func(
+						db contract.DB,
+					) *orm.QueryBuilder[{{ $rel.ChildModel }}, {{ $rel.ChildMutator }}] {
+						return New{{ $rel.ChildModel }}Query(db)
+					},
+					{{- if eq (len $rel.LocalKeyCols) 1 }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return p.{{ (index $rel.LocalKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return []any{
+								{{- range $col := $rel.LocalKeyCols }}
+									p.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					{{- if eq (len $rel.ForeignKeyCols) 1 }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return c.{{ (index $rel.ForeignKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return []any{
+								{{- range $col := $rel.ForeignKeyCols }}
+									c.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					Hydrator: func(p *{{ $rel.ParentModel }}, children []{{ $rel.ChildModel }}) {
+						if len(children) > 0 {
+							p.{{ $rel.FieldName }} = &children[0]
+						}
+					},
+				},
+			}
+		{{- end }}
+		{{- range $rel := $tbl.HasMany }}
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.HasMany[
+				{{ $rel.ParentModel }},
+				{{ $rel.ChildModel }},
+				{{ $rel.ChildMutator }},
+			]{
+				Relation: relation.Relation[
+					{{ $rel.ParentModel }},
+					{{ $rel.ChildModel }},
+					{{ $rel.ChildMutator }},
+				]{
+					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
+						{{- range $col := $rel.ForeignKeyCols }}
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+						{{- end }}
+					},
+					ChildQueryFactory: func(
+						db contract.DB,
+					) *orm.QueryBuilder[{{ $rel.ChildModel }}, {{ $rel.ChildMutator }}] {
+						return New{{ $rel.ChildModel }}Query(db)
+					},
+					{{- if eq (len $rel.LocalKeyCols) 1 }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return p.{{ (index $rel.LocalKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+							return []any{
+								{{- range $col := $rel.LocalKeyCols }}
+									p.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					{{- if eq (len $rel.ForeignKeyCols) 1 }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return c.{{ (index $rel.ForeignKeyCols 0).ToGoPascalName }}
+						},
+					{{- else }}
+						ForeignKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+							return []any{
+								{{- range $col := $rel.ForeignKeyCols }}
+									c.{{ $col.ToGoPascalName }},
+								{{- end }}
+							}
+						},
+					{{- end }}
+					Hydrator: func(p *{{ $rel.ParentModel }}, children []{{ $rel.ChildModel }}) {
+						ptrs := make([]*{{ $rel.ChildModel }}, len(children))
+						for i := range children {
+							ptrs[i] = &children[i]
+						}
+						p.{{ $rel.FieldName }} = ptrs
+					},
+				},
+			}
+		{{- end }}
+		{{- range $rel := $tbl.BelongsToMany }}
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.BelongsToMany[
+				{{ $rel.ParentModel }},
+				{{ $rel.ChildModel }},
+				{{ $rel.ChildMutator }},
+			]{
+				PivotSchema:             "{{ $rel.JoinTableSchema }}",
+				PivotTable:              "{{ $rel.JoinTable }}",
+				PivotForeignKeyToParent: "{{ $rel.JoinTableFK1 }}",
+				PivotForeignKeyToChild:  "{{ $rel.JoinTableFK2 }}",
+				ChildForeignKeyColumn:   Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $rel.ChildForeignKeyCol.ToGoPascalName }},
+				ChildQueryFactory: func(
+					db contract.DB,
+				) *orm.QueryBuilder[{{ $rel.ChildModel }}, {{ $rel.ChildMutator }}] {
+					return New{{ $rel.ChildModel }}Query(db)
+				},
+				LocalKeyExtractor: func(p *{{ $rel.ParentModel }}) any {
+					return p.{{ $rel.ParentKeyCol.ToGoPascalName }}
+				},
+				ChildKeyExtractor: func(c *{{ $rel.ChildModel }}) any {
+					return c.{{ $rel.ChildForeignKeyCol.ToGoPascalName }}
+				},
+				Hydrator: func(p *{{ $rel.ParentModel }}, children []{{ $rel.ChildModel }}) {
+					ptrs := make([]*{{ $rel.ChildModel }}, len(children))
+					for i := range children {
+						ptrs[i] = &children[i]
+					}
+					p.{{ $rel.FieldName }} = ptrs
+				},
+			}
+		{{- end }}
+	{{- end }}
+}
+

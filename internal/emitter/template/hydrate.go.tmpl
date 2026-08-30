@@ -1,0 +1,28 @@
+package {{ .PackageName }}
+
+// Hydrate maps table columns dynamically into pointers.
+var Hydrate = struct {
+	{{- range $tbl := .Tables }}
+		{{- $mName := $tbl.ToGoModelName }}
+		{{ $mName }} func(*{{ $mName }}, []string) []any
+	{{- end }}
+}{
+	{{- range $tbl := .Tables }}
+		{{- $mName := $tbl.ToGoModelName }}
+		{{ $mName }}: func(model *{{ $mName }}, columns []string) []any {
+			pointers := make([]any, len(columns))
+			for i, col := range columns {
+				switch col {
+				{{- range $tbl.Columns }}
+					case Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ .ToGoPascalName }}.ColumnName():
+						pointers[i] = &model.{{ .ToGoPascalName }}
+				{{- end }}
+				default:
+					var discard any
+					pointers[i] = &discard
+				}
+			}
+			return pointers
+		},
+	{{- end }}
+}
