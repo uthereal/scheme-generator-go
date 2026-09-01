@@ -349,3 +349,78 @@ func TestNexusFranchiseInquiriesEnumIntegration(
 	}
 }
 
+const fleetDDL = `
+CREATE SCHEMA IF NOT EXISTS fleet;
+
+CREATE TABLE IF NOT EXISTS fleet.addresses
+(
+    id     UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
+    street VARCHAR(255)     NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS fleet.franchises
+(
+    id                 UUID PRIMARY KEY NOT NULL DEFAULT uuidv7(),
+    name               VARCHAR(255)     NOT NULL UNIQUE,
+    address_billing_id UUID             NOT NULL REFERENCES fleet.addresses (id)
+);
+`
+
+func TestFleetFranchiseCustomRelationIntegration(
+	t *testing.T,
+) {
+	tempDir, err := os.MkdirTemp("", "generator-fleet-*")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	fSys := fstest.MapFS{
+		"schema.sql": &fstest.MapFile{
+			Data: []byte(fleetDDL),
+		},
+	}
+
+	err = Run(fSys, "fleetdb", tempDir)
+	require.NoError(t, err)
+
+	// Verify models.go has AddressBilling *FleetAddress
+	pModels := filepath.Join(tempDir, "models.go")
+	assert.FileExists(t, pModels)
+	bytesModels, errModels := os.ReadFile(pModels)
+	require.NoError(t, errModels)
+	contentModels := string(bytesModels)
+	assert.Contains(
+		t,
+		contentModels,
+		"AddressBilling *FleetAddress",
+	)
+	assert.NotContains(
+		t,
+		contentModels,
+		"FleetAddress *FleetAddress",
+	)
+
+	// Verify schema.go has AddressBilling
+	pSchema := filepath.Join(tempDir, "schema.go")
+	assert.FileExists(t, pSchema)
+	bytesSchema, errSchema := os.ReadFile(pSchema)
+	require.NoError(t, errSchema)
+	contentSchema := string(bytesSchema)
+	assert.Regexp(
+		t,
+		`AddressBilling\s+relation\.BelongsTo\[`,
+		contentSchema,
+	)
+
+	// Verify relations.go
+	pRelations := filepath.Join(tempDir, "relations.go")
+	assert.FileExists(t, pRelations)
+	bytesRel, errRel := os.ReadFile(pRelations)
+	require.NoError(t, errRel)
+	contentRel := string(bytesRel)
+	assert.Contains(
+		t,
+		contentRel,
+		"Schema.Fleet.FleetFranchise.AddressBilling = relation.BelongsTo[",
+	)
+}
+

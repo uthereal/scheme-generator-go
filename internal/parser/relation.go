@@ -3,11 +3,35 @@ package parser
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/ettle/strcase"
 	"github.com/uthereal/scheme-generator-go/internal/ast"
 	"github.com/uthereal/scheme-generator-go/internal/inflection"
 )
+
+// deriveBelongsToFieldName extracts a clean PascalCase field name from the
+// foreign key column name by stripping common suffixes (_id, _uuid, _fk).
+func deriveBelongsToFieldName(
+	fk *ast.ForeignKey,
+	fallbackModelName string,
+) string {
+	if len(fk.FkColumns) == 1 && fk.FkColumns[0] != nil {
+		colName := strings.ToLower(fk.FkColumns[0].Name)
+		suffixes := []string{"_id", "_uuid", "_fk"}
+		trimmed := colName
+		for _, suffix := range suffixes {
+			if strings.HasSuffix(trimmed, suffix) {
+				trimmed = strings.TrimSuffix(trimmed, suffix)
+				break
+			}
+		}
+		if trimmed != "" {
+			return strcase.ToGoPascal(trimmed)
+		}
+	}
+	return fallbackModelName
+}
 
 // buildRelations analyzes foreign keys and constraints across all schemas and
 // tables to populate BelongsTo, BelongsToMany, HasOne, and HasMany relations.
@@ -239,9 +263,26 @@ func (p *PostgresAccumulator) buildRelations() {
 				localKeys = []*ast.Column{refTable.Columns[0]}
 			}
 
+			belongsToFieldName := deriveBelongsToFieldName(fk, aModel)
+			existingBelongsTo := mapQualifiedTableNameToBelongsTo[tblQualifiedName]
+			isCollision := false
+			for _, existing := range existingBelongsTo {
+				if existing.FieldName == belongsToFieldName {
+					isCollision = true
+					break
+				}
+			}
+			if isCollision && len(fk.FkColumns) > 0 && fk.FkColumns[0] != nil {
+				belongsToFieldName = fmt.Sprintf(
+					"%s%s",
+					belongsToFieldName,
+					strcase.ToGoPascal(fk.FkColumns[0].Name),
+				)
+			}
+
 			bRel := &ast.RelationBelongsTo{
-				Name:           aModel,
-				FieldName:      aModel,
+				Name:           belongsToFieldName,
+				FieldName:      belongsToFieldName,
 				ParentModel:    bModel,
 				ChildModel:     aModel,
 				ChildMutator:   aModel + "Mutator",

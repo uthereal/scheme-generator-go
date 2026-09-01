@@ -155,7 +155,7 @@ func TestParseDDL_Relations(
 		assert.Equal(t, postsTbl, usersTbl.HasMany[0].ChildTable)
 
 		require.Len(t, postsTbl.BelongsTo, 1)
-		assert.Equal(t, "PublicUser", postsTbl.BelongsTo[0].Name)
+		assert.Equal(t, "User", postsTbl.BelongsTo[0].Name)
 		assert.Equal(t, "PublicPost", postsTbl.BelongsTo[0].ParentModel)
 		assert.Equal(t, "PublicUser", postsTbl.BelongsTo[0].ChildModel)
 		assert.Equal(t, usersTbl, postsTbl.BelongsTo[0].ChildTable)
@@ -193,7 +193,7 @@ func TestParseDDL_Relations(
 		assert.Equal(t, profilesTbl, usersTbl.HasOne[0].ChildTable)
 
 		require.Len(t, profilesTbl.BelongsTo, 1)
-		assert.Equal(t, "PublicUser", profilesTbl.BelongsTo[0].Name)
+		assert.Equal(t, "User", profilesTbl.BelongsTo[0].Name)
 	})
 
 	t.Run("auto-detects M:N BelongsToMany on pivot table", func(
@@ -361,7 +361,7 @@ func TestParseDDL_Relations(
 		assert.Equal(t, contentPosts, authUsers.HasMany[0].ChildTable)
 
 		require.Len(t, contentPosts.BelongsTo, 1)
-		assert.Equal(t, "AuthUser", contentPosts.BelongsTo[0].Name)
+		assert.Equal(t, "Author", contentPosts.BelongsTo[0].Name)
 		assert.Equal(t, authUsers, contentPosts.BelongsTo[0].ChildTable)
 
 		require.Len(t, contentPosts.BelongsToMany, 1)
@@ -375,6 +375,55 @@ func TestParseDDL_Relations(
 			contentTags,
 			contentPosts.BelongsToMany[0].ChildTable,
 		)
+	})
+
+	t.Run("handles custom FK suffixes and multiple FKs to same table", func(
+		t *testing.T,
+	) {
+		ddl := `
+		CREATE SCHEMA fleet;
+
+		CREATE TABLE fleet.addresses (
+			id UUID PRIMARY KEY NOT NULL,
+			street TEXT NOT NULL
+		);
+
+		CREATE TABLE fleet.franchises (
+			id UUID PRIMARY KEY NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			address_billing_id UUID NOT NULL REFERENCES fleet.addresses (id),
+			address_shipping_id UUID NOT NULL REFERENCES fleet.addresses (id)
+		);
+		`
+
+		state := parser.NewPostgresAccumulator()
+		err := state.ParseDDL(ddl)
+		require.NoError(t, err)
+
+		var fleetSchema *ast.Schema
+		for _, sc := range state.Schemas {
+			if sc.Name == "fleet" {
+				fleetSchema = sc
+				break
+			}
+		}
+		require.NotNil(t, fleetSchema)
+
+		franchises := fleetSchema.Tables["franchises"]
+		addresses := fleetSchema.Tables["addresses"]
+		require.NotNil(t, franchises)
+		require.NotNil(t, addresses)
+
+		require.Len(t, franchises.BelongsTo, 2)
+		assert.Equal(t, "AddressBilling", franchises.BelongsTo[0].FieldName)
+		assert.Equal(t, "AddressBilling", franchises.BelongsTo[0].Name)
+		assert.Equal(t, "FleetAddress", franchises.BelongsTo[0].ChildModel)
+		assert.Equal(t, addresses, franchises.BelongsTo[0].ChildTable)
+
+		assert.Equal(t, "AddressShipping", franchises.BelongsTo[1].FieldName)
+		assert.Equal(t, "AddressShipping", franchises.BelongsTo[1].Name)
+		assert.Equal(t, "FleetAddress", franchises.BelongsTo[1].ChildModel)
+		assert.Equal(t, addresses, franchises.BelongsTo[1].ChildTable)
 	})
 }
 
