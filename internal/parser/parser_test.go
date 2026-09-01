@@ -56,6 +56,8 @@ func TestParseDDL_Basic(
 	colRole := tbl.Columns[1]
 	assert.Equal(t, "role", colRole.Name)
 	assert.Equal(t, "user_role", colRole.Type)
+	assert.Equal(t, ast.CustomEnum, colRole.CustomType)
+	assert.Equal(t, "UserRole", colRole.ToModelType())
 	assert.False(t, colRole.IsNullable)
 
 	colEmail := tbl.Columns[2]
@@ -629,4 +631,71 @@ func TestParseDDL_RenameCollisions(
 			"table 'custom_sc.same_name' already exists",
 		)
 	})
+}
+
+func TestParseDDL_EnumResolution(
+	t *testing.T,
+) {
+	ddl := `
+	CREATE SCHEMA nexus;
+	CREATE TYPE nexus.franchise_inquiry_status AS ENUM (
+		'pending',
+		'contacted',
+		'archived'
+	);
+
+	CREATE TABLE nexus.franchise_inquiries (
+		id UUID PRIMARY KEY NOT NULL,
+		name VARCHAR(255) NOT NULL,
+		status nexus.franchise_inquiry_status NOT NULL DEFAULT 'pending',
+		backup_status nexus.franchise_inquiry_status,
+		all_statuses nexus.franchise_inquiry_status[] NOT NULL DEFAULT '{}'
+	);
+	`
+
+	state := parser.NewPostgresAccumulator()
+	err := state.ParseDDL(ddl)
+	require.NoError(t, err)
+
+	require.Len(t, state.Schemas, 2)
+	nexusSc := state.Schemas[0]
+	if nexusSc.Name != "nexus" {
+		nexusSc = state.Schemas[1]
+	}
+	require.Equal(t, "nexus", nexusSc.Name)
+	require.Contains(t, nexusSc.Tables, "franchise_inquiries")
+
+	tbl := nexusSc.Tables["franchise_inquiries"]
+	require.Len(t, tbl.Columns, 5)
+
+	colStatus := tbl.Columns[2]
+	assert.Equal(t, "status", colStatus.Name)
+	assert.Equal(t, "franchise_inquiry_status", colStatus.Type)
+	assert.Equal(t, ast.CustomEnum, colStatus.CustomType)
+	assert.Equal(t, "FranchiseInquiryStatus", colStatus.ToModelType())
+	assert.Equal(
+		t,
+		"column.StringColumn[NexusFranchiseInquiry, FranchiseInquiryStatus]",
+		colStatus.ToQueryColumnType("NexusFranchiseInquiry"),
+	)
+
+	colBackup := tbl.Columns[3]
+	assert.Equal(t, "backup_status", colBackup.Name)
+	assert.Equal(t, ast.CustomEnum, colBackup.CustomType)
+	assert.Equal(t, "*FranchiseInquiryStatus", colBackup.ToModelType())
+	assert.Equal(
+		t,
+		"column.NullableStringColumn[NexusFranchiseInquiry, FranchiseInquiryStatus]",
+		colBackup.ToQueryColumnType("NexusFranchiseInquiry"),
+	)
+
+	colAll := tbl.Columns[4]
+	assert.Equal(t, "all_statuses", colAll.Name)
+	assert.Equal(t, ast.CustomEnum, colAll.CustomType)
+	assert.Equal(t, "[]FranchiseInquiryStatus", colAll.ToModelType())
+	assert.Equal(
+		t,
+		"column.ArrayColumn[NexusFranchiseInquiry, FranchiseInquiryStatus]",
+		colAll.ToQueryColumnType("NexusFranchiseInquiry"),
+	)
 }

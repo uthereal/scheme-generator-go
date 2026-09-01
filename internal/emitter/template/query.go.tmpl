@@ -11,9 +11,15 @@ import (
 	// New{{ $mName }}Query constructs a QueryBuilder.
 	func New{{ $mName }}Query(
 		db contract.DB,
-	) *orm.QueryBuilder[{{ $mName }}, {{ $mName }}Mutator] {
+	) *orm.QueryBuilder[
+		{{ $mName }},
+		{{ $mName }}Mutator,
+	] {
 		compiler := grammar.NewPostgresGrammar()
-		res := orm.NewQueryBuilder[{{ $mName }}, {{ $mName }}Mutator](
+		res := orm.NewQueryBuilder[
+			{{ $mName }},
+			{{ $mName }}Mutator,
+		](
 			db,
 			compiler,
 			Table.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }},

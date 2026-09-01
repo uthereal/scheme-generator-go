@@ -216,3 +216,136 @@ func TestNexusSchemaIntegration(
 	assert.Contains(t, contentMutator, "type NexusUserMutator struct")
 	assert.NotContains(t, contentMutator, "NexuUser")
 }
+
+const franchiseInquiriesDDL = `
+CREATE SCHEMA IF NOT EXISTS nexus;
+
+CREATE TYPE nexus.franchise_inquiry_status AS ENUM (
+	'pending',
+	'contacted',
+	'archived'
+);
+
+CREATE TABLE IF NOT EXISTS nexus.franchise_inquiries
+(
+    id         UUID PRIMARY KEY         NOT NULL,
+    name       VARCHAR(255)             NOT NULL,
+    email      VARCHAR(255)             NOT NULL,
+    phone      VARCHAR(50)              NOT NULL,
+    message    TEXT                     NOT NULL,
+    status     nexus.franchise_inquiry_status NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ(6)           NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ(6)           NOT NULL DEFAULT NOW()
+);
+`
+
+func TestNexusFranchiseInquiriesEnumIntegration(
+	t *testing.T,
+) {
+	tempDir, err := os.MkdirTemp("", "generator-franchise-*")
+	require.NoError(t, err)
+	defer os.RemoveAll(tempDir)
+
+	fSys := fstest.MapFS{
+		"schema.sql": &fstest.MapFile{
+			Data: []byte(franchiseInquiriesDDL),
+		},
+	}
+
+	err = Run(fSys, "nexus", tempDir)
+	require.NoError(t, err)
+
+	// Verify enums.go
+	pEnums := filepath.Join(tempDir, "enums.go")
+	assert.FileExists(t, pEnums)
+	bytesEnums, errEnums := os.ReadFile(pEnums)
+	require.NoError(t, errEnums)
+	contentEnums := string(bytesEnums)
+	assert.Contains(t, contentEnums, "type FranchiseInquiryStatus string")
+	assert.Contains(
+		t,
+		contentEnums,
+		`const FranchiseInquiryStatusPending FranchiseInquiryStatus = "pending"`,
+	)
+	assert.Contains(
+		t,
+		contentEnums,
+		`const FranchiseInquiryStatusContacted FranchiseInquiryStatus = "contacted"`,
+	)
+	assert.Contains(
+		t,
+		contentEnums,
+		`const FranchiseInquiryStatusArchived FranchiseInquiryStatus = "archived"`,
+	)
+
+	// Verify models.go
+	pModels := filepath.Join(tempDir, "models.go")
+	assert.FileExists(t, pModels)
+	bytesModels, errModels := os.ReadFile(pModels)
+	require.NoError(t, errModels)
+	contentModels := string(bytesModels)
+	assert.Regexp(t, `Status\s+FranchiseInquiryStatus`, contentModels)
+
+	// Verify mutator.go
+	pMutator := filepath.Join(tempDir, "mutator.go")
+	assert.FileExists(t, pMutator)
+	bytesMutator, errMutator := os.ReadFile(pMutator)
+	require.NoError(t, errMutator)
+	contentMutator := string(bytesMutator)
+	assert.Regexp(
+		t,
+		`Status\s+contract\.Set\[FranchiseInquiryStatus\]`,
+		contentMutator,
+	)
+
+	// Verify schema.go
+	pSchema := filepath.Join(tempDir, "schema.go")
+	assert.FileExists(t, pSchema)
+	bytesSchema, errSchema := os.ReadFile(pSchema)
+	require.NoError(t, errSchema)
+	contentSchema := string(bytesSchema)
+	pattern := `Status\s+column\.StringColumn\[` +
+		`NexusFranchiseInquiry,\s*FranchiseInquiryStatus\]`
+	assert.Regexp(
+		t,
+		pattern,
+		contentSchema,
+	)
+
+	// Verify line length <= 80 characters for all generated files
+	files := []string{
+		"models.go",
+		"mutator.go",
+		"schema.go",
+		"table.go",
+		"hydrate.go",
+		"dehydrate.go",
+		"relations.go",
+		"query.go",
+		"enums.go",
+	}
+	for _, f := range files {
+		p := filepath.Join(tempDir, f)
+		assert.FileExists(t, p)
+		var b []byte
+		b, err = os.ReadFile(p)
+		require.NoError(t, err)
+		lines := strings.Split(string(b), "\n")
+		for idx, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "sqlStr :=") {
+				continue
+			}
+			assert.LessOrEqual(
+				t,
+				len(line),
+				80,
+				"Line %d in file %s exceeds 80 characters: %q",
+				idx+1,
+				f,
+				line,
+			)
+		}
+	}
+}
+

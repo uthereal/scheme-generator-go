@@ -120,9 +120,9 @@ func Test_Integration_RealPostgres_KitchenSink(
 					IsSet: true,
 					Value: metaJSON,
 				},
-				Status: contract.Set[string]{
+				Status: contract.Set[generated.UserStatus]{
 					IsSet: true,
-					Value: "active",
+					Value: generated.UserStatusActive,
 				},
 				RoleID: contract.Set[*int64]{
 					IsSet: true,

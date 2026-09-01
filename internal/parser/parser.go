@@ -65,6 +65,7 @@ func (p *PostgresAccumulator) ParseDDL(ddl string) error {
 	})
 
 	p.Schemas = resSchemas
+	p.resolveCustomTypes()
 	return nil
 }
 
@@ -409,4 +410,55 @@ func (p *PostgresAccumulator) getTable(
 	}
 
 	return tbl, nil
+}
+
+// resolveCustomTypes iterates over all schema table columns and marks columns
+// whose type matches a registered enum with ast.CustomEnum.
+func (p *PostgresAccumulator) resolveCustomTypes() {
+	for _, sc := range p.Schemas {
+		for _, tbl := range sc.Tables {
+			for _, col := range tbl.Columns {
+				if col.CustomType != ast.CustomNone {
+					continue
+				}
+
+				isEnum := p.isEnumType(col.Type, sc.Name)
+				if isEnum {
+					col.CustomType = ast.CustomEnum
+				}
+			}
+		}
+	}
+}
+
+// isEnumType returns true if the type name matches an enum in the given schema,
+// public schema, or any registered schema in deterministic sorted order.
+func (p *PostgresAccumulator) isEnumType(
+	typeName string,
+	schemaName string,
+) bool {
+	sc, exists := p.mapSchemaNameToSchema[schemaName]
+	if exists {
+		_, ok := sc.Enums[typeName]
+		if ok {
+			return true
+		}
+	}
+
+	pubSc, existsPub := p.mapSchemaNameToSchema[defaultSchemaName]
+	if existsPub {
+		_, okPub := pubSc.Enums[typeName]
+		if okPub {
+			return true
+		}
+	}
+
+	for _, s := range p.Schemas {
+		_, okAny := s.Enums[typeName]
+		if okAny {
+			return true
+		}
+	}
+
+	return false
 }

@@ -9,7 +9,10 @@ var Hydrate = struct {
 }{
 	{{- range $tbl := .Tables }}
 		{{- $mName := $tbl.ToGoModelName }}
-		{{ $mName }}: func(model *{{ $mName }}, columns []string) []any {
+		{{ $mName }}: func(
+			model *{{ $mName }},
+			columns []string,
+		) []any {
 			pointers := make([]any, len(columns))
 			for i, col := range columns {
 				switch col {
