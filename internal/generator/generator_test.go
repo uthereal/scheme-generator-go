@@ -146,8 +146,8 @@ func TestCompositeKeyIntegration(
 	content := string(bytes)
 
 	// Verify that composite columns are written to ForeignKeyColumns
-	assert.Contains(t, content, "Schema.Public.PublicChild.TenantID")
-	assert.Contains(t, content, "Schema.Public.PublicChild.ParentID")
+	assert.Contains(t, content, "Schema.Public.Child.TenantID")
+	assert.Contains(t, content, "Schema.Public.Child.ParentID")
 
 	// Verify that the composite key extractors return slice slices of any
 	assert.Contains(t, content, "[]any{")
@@ -203,7 +203,7 @@ func TestNexusSchemaIntegration(
 	bytesSchema, err := os.ReadFile(pSchema)
 	require.NoError(t, err)
 	contentSchema := string(bytesSchema)
-	assert.Contains(t, contentSchema, "Nexus struct {\n\t\tNexusUser struct {")
+	assert.Contains(t, contentSchema, "Nexus struct {\n\t\tUser struct {")
 	assert.Contains(t, contentSchema, "column.UUIDColumn[NexusUser]")
 	assert.NotContains(t, contentSchema, "NexuUser")
 
@@ -420,7 +420,7 @@ func TestFleetFranchiseCustomRelationIntegration(
 	assert.Contains(
 		t,
 		contentRel,
-		"Schema.Fleet.FleetFranchise.AddressBilling = relation.BelongsTo[",
+		"Schema.Fleet.Franchise.AddressBilling = relation.BelongsTo[",
 	)
 }
 

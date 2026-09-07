@@ -7,6 +7,7 @@ import (
 )
 {{- range $tbl := .Tables }}
 	{{- $mName := $tbl.ToGoModelName }}
+	{{- $tName := $tbl.ToGoTableName }}
 
 	// New{{ $mName }}Query constructs a QueryBuilder.
 	func New{{ $mName }}Query(
@@ -22,7 +23,7 @@ import (
 		](
 			db,
 			compiler,
-			Table.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }},
+			Table.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }},
 			Hydrate.{{ $mName }},
 			Dehydrate.{{ $mName }},
 		)

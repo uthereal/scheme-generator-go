@@ -9,6 +9,7 @@ var Hydrate = struct {
 }{
 	{{- range $tbl := .Tables }}
 		{{- $mName := $tbl.ToGoModelName }}
+		{{- $tName := $tbl.ToGoTableName }}
 		{{ $mName }}: func(
 			model *{{ $mName }},
 			columns []string,
@@ -17,7 +18,7 @@ var Hydrate = struct {
 			for i, col := range columns {
 				switch col {
 				{{- range $tbl.Columns }}
-					case Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ .ToGoPascalName }}.ColumnName():
+					case Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ .ToGoPascalName }}.ColumnName():
 						pointers[i] = &model.{{ .ToGoPascalName }}
 				{{- end }}
 				default:

@@ -14,7 +14,8 @@ var Schema = struct {
 		{{ $sc.ToGoPascalName }} struct {
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }} struct {
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }} struct {
 					{{- range $col := $tbl.Columns }}
 						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
 					{{- end }}
@@ -39,7 +40,8 @@ var Schema = struct {
 		{{ $sc.ToGoPascalName }}: struct {
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }} struct {
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }} struct {
 					{{- range $col := $tbl.Columns }}
 						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
 					{{- end }}
@@ -60,7 +62,8 @@ var Schema = struct {
 		}{
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }}: struct {
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }}: struct {
 					{{- range $col := $tbl.Columns }}
 						{{ $col.ToGoPascalName }} {{ $col.ToQueryColumnType $mName }}
 					{{- end }}

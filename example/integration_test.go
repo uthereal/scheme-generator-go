@@ -45,13 +45,13 @@ func Test_Integration_RealPostgres_KitchenSink(
 	childQuery := generated.NewTenantChildQuery(db)
 	deviceQuery := generated.NewAuthDeviceQuery(db)
 
-	var insertedRole generated.AuthRole
-	var insertedPerm generated.AuthPermission
-	var insertedUser generated.AuthUser
-	var insertedPost generated.ContentPost
-	var insertedTag generated.ContentTag
-	var insertedParent generated.TenantParent
-	var insertedChild generated.TenantChild
+	var insertedRole *generated.AuthRole
+	var insertedPerm *generated.AuthPermission
+	var insertedUser *generated.AuthUser
+	var insertedPost *generated.ContentPost
+	var insertedTag *generated.ContentTag
+	var insertedParent *generated.TenantParent
+	var insertedChild *generated.TenantChild
 
 	t.Run("Insert Auth roles, permissions, and M:N link", func(
 		t *testing.T,
@@ -268,8 +268,8 @@ func Test_Integration_RealPostgres_KitchenSink(
 		t *testing.T,
 	) {
 		users, errQuery := userQuery.
-			With(generated.Schema.Auth.AuthUser.Posts).
-			Where(generated.Schema.Auth.AuthUser.ID.Eq(*insertedUser.ID)).
+			With(generated.Schema.Auth.User.Posts).
+			Where(generated.Schema.Auth.User.ID.Eq(*insertedUser.ID)).
 			Get(ctx)
 		require.NoError(t, errQuery)
 		require.Len(t, users, 1)
@@ -281,21 +281,21 @@ func Test_Integration_RealPostgres_KitchenSink(
 		t *testing.T,
 	) {
 		posts, errQuery := postQuery.
-			With(generated.Schema.Content.ContentPost.AuthUser).
-			Where(generated.Schema.Content.ContentPost.ID.Eq(*insertedPost.ID)).
+			With(generated.Schema.Content.Post.User).
+			Where(generated.Schema.Content.Post.ID.Eq(*insertedPost.ID)).
 			Get(ctx)
 		require.NoError(t, errQuery)
 		require.Len(t, posts, 1)
-		require.NotNil(t, posts[0].AuthUser)
-		assert.Equal(t, insertedUser.Email, posts[0].AuthUser.Email)
+		require.NotNil(t, posts[0].User)
+		assert.Equal(t, insertedUser.Email, posts[0].User.Email)
 	})
 
 	t.Run("Eager Load Post -> Tags (M:N BelongsToMany)", func(
 		t *testing.T,
 	) {
 		posts, errQuery := postQuery.
-			With(generated.Schema.Content.ContentPost.Tags).
-			Where(generated.Schema.Content.ContentPost.ID.Eq(*insertedPost.ID)).
+			With(generated.Schema.Content.Post.Tags).
+			Where(generated.Schema.Content.Post.ID.Eq(*insertedPost.ID)).
 			Get(ctx)
 		require.NoError(t, errQuery)
 		require.Len(t, posts, 1)
@@ -307,8 +307,8 @@ func Test_Integration_RealPostgres_KitchenSink(
 		t *testing.T,
 	) {
 		roles, errQuery := roleQuery.
-			With(generated.Schema.Auth.AuthRole.Permissions).
-			Where(generated.Schema.Auth.AuthRole.ID.Eq(*insertedRole.ID)).
+			With(generated.Schema.Auth.Role.Permissions).
+			Where(generated.Schema.Auth.Role.ID.Eq(*insertedRole.ID)).
 			Get(ctx)
 		require.NoError(t, errQuery)
 		require.Len(t, roles, 1)
@@ -324,9 +324,9 @@ func Test_Integration_RealPostgres_KitchenSink(
 		t *testing.T,
 	) {
 		parents, errQuery := parentQuery.
-			With(generated.Schema.Tenant.TenantParent.Childrens).
+			With(generated.Schema.Tenant.Parent.Childrens).
 			Where(
-				generated.Schema.Tenant.TenantParent.ID.Eq(
+				generated.Schema.Tenant.Parent.ID.Eq(
 					*insertedParent.ID,
 				),
 			).
@@ -368,7 +368,7 @@ func Test_Integration_RealPostgres_KitchenSink(
 
 		devices, errQuery := deviceQuery.
 			Where(
-				generated.Schema.Auth.AuthDevice.ID.Eq(
+				generated.Schema.Auth.Device.ID.Eq(
 					deviceID.String(),
 				),
 			).

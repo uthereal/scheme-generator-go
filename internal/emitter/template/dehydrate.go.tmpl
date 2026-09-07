@@ -9,6 +9,7 @@ var Dehydrate = struct {
 }{
 	{{- range $tbl := .Tables }}
 		{{- $mName := $tbl.ToGoModelName }}
+		{{- $tName := $tbl.ToGoTableName }}
 		{{ $mName }}: func(
 			mutator *{{ $mName }}Mutator,
 		) ([]string, []any) {
@@ -18,7 +19,7 @@ var Dehydrate = struct {
 				if mutator.{{ .ToGoPascalName }}.IsSet {
 					cols = append(
 						cols,
-						Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ .ToGoPascalName }}.ColumnName(),
+						Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ .ToGoPascalName }}.ColumnName(),
 					)
 					vals = append(vals, mutator.{{ .ToGoPascalName }}.Value)
 				}

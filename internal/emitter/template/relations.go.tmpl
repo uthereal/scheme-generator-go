@@ -9,8 +9,9 @@ import (
 func init() {
 	{{- range $tbl := .Tables }}
 		{{- $mName := $tbl.ToGoModelName }}
+		{{- $tName := $tbl.ToGoTableName }}
 		{{- range $rel := $tbl.BelongsTo }}
-			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.BelongsTo[
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ $rel.FieldName }} = relation.BelongsTo[
 				{{ $rel.ParentModel }},
 				{{ $rel.ChildModel }},
 				{{ $rel.ChildMutator }},
@@ -22,7 +23,7 @@ func init() {
 				]{
 					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
 						{{- range $col := $rel.LocalKeyCols }}
-							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoTableName }}.{{ $col.ToGoPascalName }},
 						{{- end }}
 					},
 					ChildQueryFactory: func(
@@ -65,7 +66,7 @@ func init() {
 			}
 		{{- end }}
 		{{- range $rel := $tbl.HasOne }}
-			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.HasOne[
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ $rel.FieldName }} = relation.HasOne[
 				{{ $rel.ParentModel }},
 				{{ $rel.ChildModel }},
 				{{ $rel.ChildMutator }},
@@ -77,7 +78,7 @@ func init() {
 				]{
 					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
 						{{- range $col := $rel.ForeignKeyCols }}
-							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoTableName }}.{{ $col.ToGoPascalName }},
 						{{- end }}
 					},
 					ChildQueryFactory: func(
@@ -120,7 +121,7 @@ func init() {
 			}
 		{{- end }}
 		{{- range $rel := $tbl.HasMany }}
-			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.HasMany[
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ $rel.FieldName }} = relation.HasMany[
 				{{ $rel.ParentModel }},
 				{{ $rel.ChildModel }},
 				{{ $rel.ChildMutator }},
@@ -132,7 +133,7 @@ func init() {
 				]{
 					ForeignKeyColumns: []contract.Column[{{ $rel.ChildModel }}]{
 						{{- range $col := $rel.ForeignKeyCols }}
-							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $col.ToGoPascalName }},
+							Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoTableName }}.{{ $col.ToGoPascalName }},
 						{{- end }}
 					},
 					ChildQueryFactory: func(
@@ -177,7 +178,7 @@ func init() {
 			}
 		{{- end }}
 		{{- range $rel := $tbl.BelongsToMany }}
-			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $rel.FieldName }} = relation.BelongsToMany[
+			Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ $rel.FieldName }} = relation.BelongsToMany[
 				{{ $rel.ParentModel }},
 				{{ $rel.ChildModel }},
 				{{ $rel.ChildMutator }},
@@ -186,7 +187,7 @@ func init() {
 				PivotTable:              "{{ $rel.JoinTable }}",
 				PivotForeignKeyToParent: "{{ $rel.JoinTableFK1 }}",
 				PivotForeignKeyToChild:  "{{ $rel.JoinTableFK2 }}",
-				ChildForeignKeyColumn:   Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoModelName }}.{{ $rel.ChildForeignKeyCol.ToGoPascalName }},
+				ChildForeignKeyColumn:   Schema.{{ $rel.ChildTable.Schema.ToGoPascalName }}.{{ $rel.ChildTable.ToGoTableName }}.{{ $rel.ChildForeignKeyCol.ToGoPascalName }},
 				ChildQueryFactory: func(
 					db contract.DB,
 				) *orm.QueryBuilder[{{ $rel.ChildModel }}, {{ $rel.ChildMutator }}] {
@@ -209,4 +210,3 @@ func init() {
 		{{- end }}
 	{{- end }}
 }
-

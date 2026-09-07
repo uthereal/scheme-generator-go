@@ -10,7 +10,8 @@ var Table = struct {
 		{{ $sc.ToGoPascalName }} struct {
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }} contract.TableMetadata[{{ $mName }}]
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }} contract.TableMetadata[{{ $mName }}]
 			{{- end }}
 		}
 	{{- end }}
@@ -19,17 +20,19 @@ var Table = struct {
 		{{ $sc.ToGoPascalName }}: struct {
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }} contract.TableMetadata[{{ $mName }}]
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }} contract.TableMetadata[{{ $mName }}]
 			{{- end }}
 		}{
 			{{- range $tbl := $sc.SortedTables }}
 				{{- $mName := $tbl.ToGoModelName }}
-				{{ $mName }}: contract.TableMetadata[{{ $mName }}]{
+				{{- $tName := $tbl.ToGoTableName }}
+				{{ $tName }}: contract.TableMetadata[{{ $mName }}]{
 					SchemaName: {{ printf "%q" $tbl.Schema.Name }},
 					TableName:  {{ printf "%q" $tbl.Name }},
 					DefaultColumns: []contract.Column[{{ $mName }}]{
 						{{- range $col := $tbl.Columns }}
-							Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $mName }}.{{ $col.ToGoPascalName }},
+							Schema.{{ $tbl.Schema.ToGoPascalName }}.{{ $tName }}.{{ $col.ToGoPascalName }},
 						{{- end }}
 					},
 				},
