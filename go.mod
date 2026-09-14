@@ -9,7 +9,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/pganalyze/pg_query_go/v6 v6.2.2
 	github.com/stretchr/testify v1.12.1
-	github.com/uthereal/scheme-runtime-go v0.0.0-20260907231234-518eb02723f5
+	github.com/uthereal/scheme-runtime-go v0.0.0-20260914024327-735fcb9d52c1
 	github.com/wasilibs/go-pgquery v0.0.0-20260904030559-0fedd6786608
 	golang.org/x/tools v0.49.0
 )

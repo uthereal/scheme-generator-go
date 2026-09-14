@@ -135,11 +135,8 @@ github.com/tklauser/go-sysconf v0.4.0 h1:7H0uAN+7RkwWRaxhYXDLqa5V3LPrJeV8wmD9dRU
 github.com/tklauser/go-sysconf v0.4.0/go.mod h1:8mTNWyog7H+MpKijp4VmKJAd2bbYQ2zuUwkYRbUArPI=
 github.com/tklauser/numcpus v0.12.0 h1:NR85qdvHA9pFse3x3weVZ0r0ST8R6l5RHbZrlRaqob4=
 github.com/tklauser/numcpus v0.12.0/go.mod h1:ABHeXzJnr/qqwguhClkZKT1/8VABcYrsyUiUGobwWJg=
-github.com/uthereal/scheme-runtime-go v0.0.0-20260827014138-bbcb90548ecc/go.mod h1:34qbaG7YdqNehZkCbhyyHO7t059ocDfYYay2ovswUQ0=
-github.com/uthereal/scheme-runtime-go v0.0.0-20260907231234-518eb02723f5 h1:nnQpghYvNl/oY6UDx2P7PVXRif5VAc/+ePhi1ktKwVw=
-github.com/uthereal/scheme-runtime-go v0.0.0-20260907231234-518eb02723f5/go.mod h1:guy1VMMcJF6l/OJyJhioNKuV+w6398PTnsXiL/nBAt4=
-github.com/wasilibs/go-pgquery v0.0.0-20260818004747-c59cae23afec h1:1KHOCxWRf82CDEVUwzmMvFten1CGOw/h42KMRFq1hPg=
-github.com/wasilibs/go-pgquery v0.0.0-20260818004747-c59cae23afec/go.mod h1:ZSyYLCRbk2xPqu7lgfrDSSHm+g/7Rxk6JK4KE2cxJ3s=
+github.com/uthereal/scheme-runtime-go v0.0.0-20260914024327-735fcb9d52c1 h1:GL+HyuLIP/sqi+rHLYDThjbkOoNjSItYmPTGr0Q15fg=
+github.com/uthereal/scheme-runtime-go v0.0.0-20260914024327-735fcb9d52c1/go.mod h1:guy1VMMcJF6l/OJyJhioNKuV+w6398PTnsXiL/nBAt4=
 github.com/wasilibs/go-pgquery v0.0.0-20260904030559-0fedd6786608 h1:DqC87JRswkyYVejHZglY37dnbbOlMpZ5DspESm04qpQ=
 github.com/wasilibs/go-pgquery v0.0.0-20260904030559-0fedd6786608/go.mod h1:SprEKrRdgM05pxCQllNAqAmrTDZpUFPFrCuAP2XPvQ0=
 github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb h1:gQ+ZV4wJke/EBKYciZ2MshEouEHFuinB85dY3f5s1q8=

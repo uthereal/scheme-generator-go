@@ -201,6 +201,25 @@ func TestColumn_ToQueryColumnType(t *testing.T) {
 			want: "column.NullableJSONColumn[User, []byte]",
 		},
 		{
+			name:      "bytea column",
+			modelName: "User",
+			col: ast.Column{
+				Name: "data",
+				Type: "bytea",
+			},
+			want: "column.ByteColumn[User]",
+		},
+		{
+			name:      "nullable bytea column",
+			modelName: "User",
+			col: ast.Column{
+				Name:       "data",
+				Type:       "bytea",
+				IsNullable: true,
+			},
+			want: "column.NullableByteColumn[User]",
+		},
+		{
 			name:      "custom enum column",
 			modelName: "User",
 			col: ast.Column{

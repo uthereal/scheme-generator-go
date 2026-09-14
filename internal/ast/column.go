@@ -259,7 +259,7 @@ var mapPgTypeToColumnTypeDefinition = map[string]ColumnTypeDefinition{
 	},
 	"bytea": {
 		ModelType:       "[]byte",
-		QueryColumnFunc: formatTypedColumn("Column"),
+		QueryColumnFunc: formatByteColumn,
 	},
 
 	// Network & System IDs
@@ -328,6 +328,19 @@ func formatUUIDColumn(
 	_ string,
 ) string {
 	return fmt.Sprintf("column.UUIDColumn[%s]", modelName)
+}
+
+// formatByteColumn formats a single-type-parameter ByteColumn definition.
+func formatByteColumn(
+	modelName string,
+	col *Column,
+	_ string,
+) string {
+	colType := "ByteColumn"
+	if col.IsNullable {
+		colType = "NullableByteColumn"
+	}
+	return fmt.Sprintf("column.%s[%s]", colType, modelName)
 }
 
 // formatTypedColumn returns a formatter closure for strongly typed query
